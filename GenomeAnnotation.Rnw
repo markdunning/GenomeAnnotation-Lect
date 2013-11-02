@@ -1,0 +1,506 @@
+% this is a simplified version of 
+% https://github.com/yihui/knitr/blob/master/inst/examples/knitr-beamer.Rnw
+\documentclass{beamer}
+\ifdefined\knitrout
+  \renewenvironment{knitrout}{\begin{footnotesize}}{\end{footnotesize}}
+\else
+\fi
+\begin{document}
+
+\title{Genomic Annotation and visualisation using R and Bioconductor}
+\author{Mark Dunning}
+\institute[Bioinformatics Core] % (optional, but mostly needed)
+{
+
+  Cancer Research Uk\\
+  Cambridge Institute\\
+  Robinson Way\\
+  Cambridge \\
+}
+\maketitle
+\begin{frame}{Outline}
+  \tableofcontents
+  % You might wish to add the option [pausesections]
+\end{frame}
+
+\begin{frame}{Previously...}
+\begin{itemize}
+\item{Introduced Bioconductor facilites for manipulating strings and ranges}
+\item{Executed workflow to find to identify genes and regions of interest in an RNA-seq experiment}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Aims}
+\begin{itemize}
+\item{Obtaining annotation information from different sources}
+\begin{itemize}
+\item{Biomart}
+\item{Pre-built Bioconductor packages}
+\item{Browser tracks}
+\end{itemize}
+\item{Visualise sequencing results and overlay with genomic annotations}
+\end{itemize}
+\end{frame}
+
+\section{biomaRt}
+
+\begin{frame}
+\begin{itemize}
+\item{A wealth of annotation resources are available online through the biomart web software suite  - www.biomart.org}
+\item{One-off queries are possible. But are they reproducible? What if you need to do further analysis on the results in R?}
+\item{Results generated using Bioconductor can be easily annotated against the vast wealth of online data available in biomart}
+
+\item{User does not need to construct complex SQL queries }
+\end{itemize}
+\end{frame}
+
+\subsection{Filters and Attributes}
+\begin{frame}[fragile]{Selecting a 'mart'}
+<<echo=FALSE>>=
+options(width=40)
+@
+Need an internet connection for this to work!
+<<biomaRt>>=
+
+library(biomaRt)
+head(listMarts(), 5)    
+ensembl <- useMart("ensembl")
+@
+
+\end{frame}
+
+
+\begin{frame}[fragile]{Select a dataset}
+<<>>=
+ensembl <- useMart("ensembl", 
+                   dataset = "hsapiens_gene_ensembl")
+head(listDatasets(ensembl),10)
+
+@
+\end{frame}
+
+
+\begin{frame}[fragile]{Example Query}
+Say we want to find out more information about a given Entrez gene(s). Essentially we want to subset the database according to a particular filter. Available filters can be listed.
+
+<<>>=
+head(listFilters(ensembl), 5)     
+listFilters(ensembl)[122,]
+@
+
+
+\end{frame}
+
+\begin{frame}[fragile]
+The information we can retrieve are known as attributes
+<<>>=
+head(listAttributes(ensembl), 5)     
+ 
+@
+\end{frame}
+
+
+\subsection{Constructing queries}
+\begin{frame}[fragile]
+Annotate a set of EntrezGene identifiers. \textit{e.g. The results of a differential-expression analysis, or similar}.
+<<query1>>=
+entrez <- c("673", "837")
+attr = c("entrezgene", "hgnc_symbol", "ensembl_gene_id",
+    "description")
+myInfo <- getBM(
+filters="entrezgene",
+values=entrez,
+attributes=attr
+,mart=ensembl)
+@
+Give me the Symbol and Ensembl ID for genes with Entrez ID 673 and 837
+\end{frame}
+
+\begin{frame}[fragile]
+<<>>=
+head(myInfo)
+@
+
+\end{frame}
+\begin{frame}[fragile]{Using multiple filters}
+A common query is to list genes within a certain genomic interval. \textit{e.g. regions of interest from a CHiP-seq analysis}
+<<locationQuery>>=
+
+getBM(c("ensembl_gene_id", "hgnc_symbol","entrezgene"), 
+      filters = c("chromosome_name", "start", "end"),
+      values=list(16, 1100000, 1250000),mart=ensembl)[1:3,]
+@
+Give me the ensembl, entrez and symbols of all genes between 1110000 and 1120000 on chromosome 16
+\end{frame}
+
+\begin{frame}[fragile]
+Can also do the query the other way around
+<<>>=
+getBM(c("ensembl_gene_id","chromosome_name", 
+        "start_position", "end_position","entrezgene"),
+      filters = "ensembl_gene_id",
+      values = c("ENSG00000261713",
+                 "ENSG00000261720",
+                 "ENSG00000181791"),
+      ensembl
+)
+@
+
+
+Many more examples in biomaRt vignette
+\end{frame}
+
+\begin{frame}[fragile]{But....}
+We had to define chromosome location in previous example
+<<eval=FALSE,echo=TRUE>>=
+values=list(8, 148350, 148612)
+@
+
+
+\begin{itemize}
+\item{I'm doing my analysis using GRanges. Can't I use the object directly!}
+\item{Bioconductor provides a number of pre-built annotation resources for each organism}
+\item{What if I'm not on the internet?}
+\item Bioconductor provides a number of pre-built annotation resources for each organism
+\end{itemize}
+\end{frame}
+
+\section{Bioconductor Annotation}
+\begin{frame}[fragile]{Genome Representation}
+We have already seen that Genome sequences have an efficient representation in Bioconductor
+
+<<echo=FALSE>>=
+suppressPackageStartupMessages(library(BSgenome.Hsapiens.UCSC.hg19))
+
+@
+
+<<>>=
+library(BSgenome.Hsapiens.UCSC.hg19)
+hg19 <- BSgenome.Hsapiens.UCSC.hg19
+gr <- GRanges("chr16", IRanges(1100000, 1250000))
+getSeq(hg19, gr)
+@
+Give me the genome sequence between 1100000 and 1250000 on chromosome 16
+\end{frame}
+
+
+\begin{frame}[fragile]{Organism Packages}
+Bioconductor maintain a number of organism-level packages which are re-built every 6 months. A central identifier (Entrez gene id) is used.
+<<echo=FALSE>>=
+suppressPackageStartupMessages(library(org.Hs.eg.db))
+
+@
+
+
+<<warnings=FALSE,messages=FALSE>>=
+library(org.Hs.eg.db)
+cols(org.Hs.eg.db)[1:20]
+@
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+keytypes perform the same function as filters
+<<>>=
+keytypes(org.Hs.eg.db)
+@
+
+\end{frame}
+
+\begin{frame}[fragile]
+Get the location of particular genes
+<<warning=FALSE>>=
+entrez
+select(org.Hs.eg.db, keys=entrez, 
+       keytype="ENTREZID", 
+       cols=c("SYMBOL",
+        "CHR", "CHRLOC", 
+        "CHRLOCEND"))
+@
+
+Give me the genomic location of genes with Entrez ID 673 and 837
+\end{frame}
+
+
+\begin{frame}[fragile]
+Genes for a particular GO term
+<<warning=FALSE>>=
+head(select(org.Hs.eg.db, keys = "GO:0003674",
+    keytype = "GO", cols = "SYMBOL"))
+
+@
+Give with the Symbols of every gene with GO ontology GO:0003674
+\end{frame}
+
+
+
+\section{Transcript-centric annotation}
+
+\begin{frame}{GenomicFeatures}
+\begin{itemize}
+\item The GenomicFeatures package retrieves and manages transcript-related features from the UCSC Genome Bioinformatics and BioMart data resources
+\item Transcript metadata is stored in an TranscriptDb object
+\item The object maps 5’ and 3’ UTRS, protein coding sequences (CDS) and exons for a set of mRNA transcripts to their associated genome
+\item SQLite database used to manage relationships between transcripts, exons, CDS and gene identifiers
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]{Pre-built packages}
+
+
+<<echo=FALSE>>=
+suppressPackageStartupMessages(library(TxDb.Hsapiens.UCSC.hg19.knownGene))
+
+@
+
+A full list of packages is available on the BioC website
+<<>>=
+library(TxDb.Hsapiens.UCSC.hg19.knownGene)
+txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
+@
+Name of package indicates the organism, transcript source and genome build
+\end{frame}
+
+
+\begin{frame}[fragile]
+
+<<>>=
+txdb
+@
+
+\end{frame}
+
+\begin{frame}[fragile]
+
+<<>>=
+cols(txdb)
+@
+
+\end{frame}
+
+\begin{frame}[fragile]
+
+<<>>=
+keytypes(txdb)
+@
+
+\end{frame}
+
+\begin{frame}[fragile]
+
+<<warning=FALSE>>=
+select(txdb, keys=entrez, 
+       keytype="GENEID", 
+       cols=c("TXID",
+        "TXCHR", "TXSTART", 
+        "TXEND"))
+@
+Give my the transcrips for genes with Entrez ID 673 and 837
+\end{frame}
+
+
+\begin{frame}[fragile]
+
+<<>>=
+mygene <- select(txdb, keys = "673", keytype = "GENEID",
+    cols = c("EXONID", "EXONCHROM", "EXONSTART","EXONEND")) 
+mygene
+@
+\end{frame}
+
+\begin{frame}[fragile]
+ could then create a GRanges object from this            
+<<>>=
+GRanges(mygene$EXONCHROM, IRanges(mygene$EXONSTART,
+    mygene$EXONEND))
+@             
+\end{frame}
+
+\begin{frame}[fragile]{Convenience Functions}
+An alternative is to retrieve all transcripts at once
+<<>>=
+trs <- transcripts(txdb)
+trs[1:2]
+@             
+\end{frame}
+
+
+\begin{frame}[fragile]
+
+<<>>=
+exons <- exonsBy(txdb, "gene")
+exons[["146336"]]
+@
+
+\end{frame}
+
+\begin{frame}[fragile]
+Or all exons
+<<>>=
+exs <- exons(txdb)
+exs[1:2]
+@
+
+\end{frame}
+
+\begin{frame}[fragile]{Grouping Genes}
+A functions exists to do this efficiently
+<<>>=
+exons <- exonsBy(txdb, "gene")
+is(exons)
+length(exons)
+@
+see also transcriptsBy, intronsByTranscript, fiveUTRsByTranscript, threeUTRsByTranscript
+\end{frame}
+
+\begin{frame}[fragile]
+The result can be subset by Gene ID (entrez)
+<<>>=
+exons[["673"]]
+@
+
+\end{frame}
+
+
+\begin{frame}{Implications}
+\begin{itemize}
+
+\item We now have a way of retrieving transcript and exon locations as GRanges.
+\item Any function that uses a GRanges object can easily interact with gene locations
+\begin{itemize}
+
+\item{Reading subset of a bam file}
+\item{Counting overlaps}
+\item{Retrieving genome sequence}
+\end{itemize}
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]{Examples}
+Retreive the subset of reads that overlap a particular gene.
+First, return the positional information about the gene as a GRanges object
+           
+<<warning=FALSE>>=
+gr <- exons[["49"]]
+@
+Pass the GRanges object into the readGappedAlignments function
+<<echo=FALSE>>=
+suppressPackageStartupMessages(library(GeneticsHTSCourse2013))  
+mybam <-NA19914.chr22Bam()      
+gr <- renameSeqlevels(gr, c("chr22"= "22"))
+@  
+
+<<>>=
+system.time(bam.sub <- readGappedAlignments(file = mybam,
+    use.names = TRUE, param = ScanBamParam(which = gr)))             
+@
+\end{frame}
+
+\begin{frame}[fragile]
+<<>>=
+bam.sub            
+@           
+\end{frame}
+
+\begin{frame}[fragile]{Extension}
+What if we want per-exon counts?
+
+<<>>==
+exonList <- split(gr, values(gr)$exon_id)
+names(exonList)
+exonList[[1]]
+gr[1]
+@
+
+\end{frame}
+
+\begin{frame}[fragile]
+
+<<>>=
+system.time(bam.sub2 <- lapply(exonList, function(x) readGappedAlignments(file=mybam,
+                      use.names=TRUE, 
+                      param=ScanBamParam(which=x))))
+@
+\end{frame}
+
+\begin{frame}[fragile]
+<<>>=
+names(bam.sub2)
+bam.sub2[[1]]
+@
+\end{frame}
+
+\begin{frame}[fragile]{Retrieving gene sequences}
+
+<<>>=
+system.time(seqs <- getSeq(hg19, exons[["49"]]))
+@
+\end{frame}
+
+\begin{frame}[fragile]
+<<>>=
+bam <- readGappedAlignments(file = mybam)
+countOverlaps(gr, bam)
+
+@
+             
+\end{frame}
+\begin{frame}[fragile]{Visualisation - ggbip}
+A consistent representation of ranges and genomic data helps with visualisation
+\begin{itemize}
+\item The ggbio package is a toolkit for producing publication-quality images from genomic data
+\item It extends the ’Grammar of Graphics’ approach taken by ggplot2
+\item It knows about the standard Bioconductor classes we have already introduced
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]
+
+
+<<echo=FALSE>>=
+suppressPackageStartupMessages(library(ggbio))
+@
+
+<<echo=TRUE,fig=TRUE,dev='pdf',fig.width=11, fig.height=5,fig.show='hold',message=FALSE>>=
+library(ggbio)
+autoplot(bam.sub)
+@
+\end{frame}
+\begin{frame}[fragile]
+<<echo=TRUE,fig=TRUE,dev='pdf',fig.width=11, fig.height=6,fig.show='hold',message=FALSE>>=
+
+autoplot(bam.sub,stat="coverage")
+@
+\end{frame}
+
+\begin{frame}[fragile]
+
+<<echo=TRUE,fig=TRUE,dev='pdf',fig.width=11, fig.height=6,fig.show='hold',message=FALSE>>=
+autoplot(txdb,which=exons[["49"]])
+
+@
+\end{frame}
+
+\begin{frame}[fragile]
+<<echo=TRUE,fig=TRUE,dev='pdf',fig.width=11, fig.height=6,fig.show='hold',message=FALSE>>=
+tracks(autoplot(txdb,which=exons[["49"]]), 
+       autoplot(bam.sub,stat="coverage"))
+@
+\end{frame}
+
+\section{Wrap-up}
+
+\begin{frame}[fragile]{This talk was brought to you by...}
+
+<<sessionInfo>>=
+
+sessionInfo()
+@
+
+\end{frame}
+
+\end{document}
