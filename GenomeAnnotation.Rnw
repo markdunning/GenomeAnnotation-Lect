@@ -6,6 +6,8 @@
 \else
 \fi
 \begin{document}
+\pgfdeclareimage[height=0.5cm]{university-logo}{images/CRUK_CAMBRIDGE_I_Pos_RGB_300}
+\logo{\pgfuseimage{university-logo}}
 
 \title{Genomic Annotation and visualisation using R and Bioconductor}
 \author{Mark Dunning}
@@ -17,11 +19,13 @@
   Robinson Way\\
   Cambridge \\
 }
-\maketitle
-\begin{frame}{Outline}
-  \tableofcontents
-  % You might wish to add the option [pausesections]
+
+{
+\usebackgroundtemplate{\includegraphics[width=\paperwidth]{images/criBackdrop.jpg}}
+\begin{frame}
+  \titlepage
 \end{frame}
+}
 
 \begin{frame}{Previously...}
 \begin{itemize}
@@ -56,8 +60,9 @@
 
 \subsection{Filters and Attributes}
 \begin{frame}[fragile]{Selecting a 'mart'}
-<<echo=FALSE>>=
+<<echo=FALSE,results='hide',message=FALSE>>=
 options(width=40)
+
 @
 Need an internet connection for this to work!
 <<biomaRt>>=
@@ -194,7 +199,7 @@ suppressPackageStartupMessages(library(org.Hs.eg.db))
 
 <<warnings=FALSE,messages=FALSE>>=
 library(org.Hs.eg.db)
-cols(org.Hs.eg.db)[1:20]
+columns(org.Hs.eg.db)[1:20]
 @
 
 \end{frame}
@@ -214,7 +219,7 @@ Get the location of particular genes
 entrez
 select(org.Hs.eg.db, keys=entrez, 
        keytype="ENTREZID", 
-       cols=c("SYMBOL",
+       columns=c("SYMBOL",
         "CHR", "CHRLOC", 
         "CHRLOCEND"))
 @
@@ -227,7 +232,7 @@ Give me the genomic location of genes with Entrez ID 673 and 837
 Genes for a particular GO term
 <<warning=FALSE>>=
 head(select(org.Hs.eg.db, keys = "GO:0003674",
-    keytype = "GO", cols = "SYMBOL"))
+    keytype = "GO", columns = "SYMBOL"))
 
 @
 Give with the Symbols of every gene with GO ontology GO:0003674
@@ -275,7 +280,7 @@ txdb
 \begin{frame}[fragile]
 
 <<>>=
-cols(txdb)
+columns(txdb)
 @
 
 \end{frame}
@@ -293,7 +298,7 @@ keytypes(txdb)
 <<warning=FALSE>>=
 select(txdb, keys=entrez, 
        keytype="GENEID", 
-       cols=c("TXID",
+       columns=c("TXID",
         "TXCHR", "TXSTART", 
         "TXEND"))
 @
@@ -305,7 +310,7 @@ Give my the transcrips for genes with Entrez ID 673 and 837
 
 <<>>=
 mygene <- select(txdb, keys = "673", keytype = "GENEID",
-    cols = c("EXONID", "EXONCHROM", "EXONSTART","EXONEND")) 
+    columns = c("EXONID", "EXONCHROM", "EXONSTART","EXONEND")) 
 mygene
 @
 \end{frame}
@@ -387,14 +392,20 @@ First, return the positional information about the gene as a GRanges object
 gr <- exons[["49"]]
 @
 Pass the GRanges object into the readGappedAlignments function
+
+<<echo=FALSE,results='hide'>>=
+
+suppressPackageStartupMessages(library(GeneticsHTSCourse2013))
+@
+
 <<echo=FALSE>>=
-suppressPackageStartupMessages(library(GeneticsHTSCourse2013))  
+
 mybam <-NA19914.chr22Bam()      
 gr <- renameSeqlevels(gr, c("chr22"= "22"))
 @  
 
 <<>>=
-system.time(bam.sub <- readGappedAlignments(file = mybam,
+system.time(bam.sub <- readGAlignments(file = mybam,
     use.names = TRUE, param = ScanBamParam(which = gr)))             
 @
 \end{frame}
@@ -420,7 +431,7 @@ gr[1]
 \begin{frame}[fragile]
 
 <<>>=
-system.time(bam.sub2 <- lapply(exonList, function(x) readGappedAlignments(file=mybam,
+system.time(bam.sub2 <- lapply(exonList, function(x) readGAlignments(file=mybam,
                       use.names=TRUE, 
                       param=ScanBamParam(which=x))))
 @
@@ -442,13 +453,13 @@ system.time(seqs <- getSeq(hg19, exons[["49"]]))
 
 \begin{frame}[fragile]
 <<>>=
-bam <- readGappedAlignments(file = mybam)
+bam <- readGAlignments(file = mybam)
 countOverlaps(gr, bam)
 
 @
              
 \end{frame}
-\begin{frame}[fragile]{Visualisation - ggbip}
+\begin{frame}[fragile]{Visualisation - ggbio}
 A consistent representation of ranges and genomic data helps with visualisation
 \begin{itemize}
 \item The ggbio package is a toolkit for producing publication-quality images from genomic data
