@@ -11,6 +11,7 @@
 
 \title{Genomic Annotation and visualisation using R and Bioconductor}
 \author{Mark Dunning}
+\date{13th March 2014}
 \institute[Bioinformatics Core] % (optional, but mostly needed)
 {
 
