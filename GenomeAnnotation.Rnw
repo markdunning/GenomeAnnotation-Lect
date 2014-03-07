@@ -309,7 +309,7 @@ Give my the transcrips for genes with Entrez ID 673 and 837
 
 \begin{frame}[fragile]
 
-<<>>=
+<<warning=FALSE>>=
 mygene <- select(txdb, keys = "673", keytype = "GENEID",
     columns = c("EXONID", "EXONCHROM", "EXONSTART","EXONEND")) 
 mygene
@@ -394,9 +394,9 @@ gr <- exons[["49"]]
 @
 Pass the GRanges object into the readGappedAlignments function
 
-<<echo=FALSE,results='hide'>>=
+<<echo=FALSE,results='hide',message=FALSE>>=
 
-suppressPackageStartupMessages(library(GeneticsHTSCourse2013))
+suppressPackageStartupMessages(library(GeneticsHTSCourse))
 @
 
 <<echo=FALSE>>=
@@ -405,7 +405,7 @@ mybam <-NA19914.chr22Bam()
 gr <- renameSeqlevels(gr, c("chr22"= "22"))
 @  
 
-<<>>=
+<<message=FALSE,results='hide'>>=
 system.time(bam.sub <- readGAlignments(file = mybam,
     use.names = TRUE, param = ScanBamParam(which = gr)))             
 @
@@ -504,15 +504,15 @@ tracks(autoplot(txdb,which=exons[["49"]]),
 @
 \end{frame}
 
-\section{Wrap-up}
+%%\section{Wrap-up}
 
-\begin{frame}[fragile]{This talk was brought to you by...}
+%%\begin{frame}[fragile]{This talk was brought to you by...}
 
-<<sessionInfo>>=
+%5<<sessionInfo>>=
 
-sessionInfo()
-@
+%5sessionInfo()%
+%@
 
-\end{frame}
+%%\end{frame}
 
 \end{document}
