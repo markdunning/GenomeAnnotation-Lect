@@ -44,6 +44,7 @@
 \item{Browser tracks}
 \end{itemize}
 \item{Visualise sequencing results and overlay with genomic annotations}
+\item{Annotate genomic variants}
 \end{itemize}
 \end{frame}
 
@@ -460,6 +461,9 @@ countOverlaps(gr, bam)
 @
              
 \end{frame}
+
+\section{Visualisation}
+
 \begin{frame}[fragile]{Visualisation - ggbio}
 A consistent representation of ranges and genomic data helps with visualisation
 \begin{itemize}
@@ -503,6 +507,288 @@ tracks(autoplot(txdb,which=exons[["49"]]),
        autoplot(bam.sub,stat="coverage"))
 @
 \end{frame}
+
+\section{Annotating Variants}
+
+
+\begin{frame}{Types of Genomic Variation}
+\begin{itemize}
+\item{Germline variation}
+\begin{itemize}
+\item{SNP: Single Nucelotide Polymorphism}
+\item{Known variants are reported in dbSNP}
+\item{indel: short insertion or deletion}
+\item{copy number variation}
+\end{itemize}
+
+\item{Somatic mutations}
+\begin{itemize}
+\item{variation in cancer}
+\item{SNV: single nucelotide variation}
+\end{itemize}
+\item{Structural variation}
+\begin{itemize}
+\item{Re-arrangements}
+\item{Fusions}
+\item{Large deletions / insertions}
+\end{itemize}
+\end{itemize}
+
+\end{frame}
+
+
+
+\begin{frame}{Problem definition}
+\begin{itemize}
+\item{Variant Calling}
+
+\begin{itemize}
+\item{Discover differences between the genome and the reference}
+\end{itemize}
+
+\item{Genotyping}
+
+\begin{itemize}
+\item{Discover the genotype of the sequenced genome}
+\end{itemize}
+
+
+\item{Differences}
+\begin{itemize}
+\item{Between matched genomes (e.g. tumour and normal)}
+\item{Differences between aligned genomes}
+\end{itemize}
+
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}{How sequencing helps - SNPs}
+\includegraphics[height=6cm]{images/example_snp.png}
+
+\end{frame}
+
+
+\begin{frame}{Bioconductor tools}
+Variant-calling is a developing area in Bioconductor
+\begin{itemize}
+\item{VariantTools - Work in Progress} 
+\item{VariantAnnotation - Import and manipulate variant calls}
+\item{deepSNV - Determine SNVs from targeted sequencing}
+\item{cn.mops - Copy Number detection}
+\item{exomeCopy - Copy Number from exome data}
+\item{ensemblVEP - Interface to ensembl}
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}{Variant Call Format}
+Emerging standard to capture results from DNA sequencing analysis.
+
+\href{http://tinyurl.com/omqnmjw}{\color{blue}Full details}
+
+\begin{itemize}
+\item{Format is tab-delimited with numerous header lines}
+\item{Each row is a different variant}
+\begin{itemize}
+\item{FIXED - variant position, base change quality and filter}
+\item{INFO - semicolon-separated series of short keys with optional values. e.g. Depth (DP), Allele Frequency (AF) and caller-specific output}
+\item{Genotypes - One column per sample}
+\end{itemize}
+\item{File can be indexed for easy access}
+\end{itemize}
+\end{frame}
+
+\subsection{Dealing with VCF files}
+\begin{frame}[fragile]
+The VariantAnnotation package is used to manipulate and process data in VCF format
+<<echo=FALSE>>=
+suppressPackageStartupMessages(library(VariantAnnotation))
+options(width=60)
+myvcf <- system.file("extdata", "chr22.vcf.gz",
+package="VariantAnnotation")
+@
+
+<<>>=
+library(VariantAnnotation)
+
+vcf <- readVcf(myvcf, genome="hg19")
+
+@
+Can specify ranges to read in 
+
+\begin{verbatim}?readVcf\end{verbatim}
+
+\end{frame}
+
+\begin{frame}[fragile]{Fixed}
+
+Retrieve the fixed information for each variant
+<<>>=
+head(fixed(vcf))
+@
+
+\end{frame}
+
+\begin{frame}[fragile]{info}
+
+<<>>=
+head(info(vcf))
+@
+
+\end{frame}
+
+\begin{frame}[fragile]
+Descriptions of the info fields are given in the file header
+<<>>=
+hdr <- exptData(vcf)[["header"]]
+info(hdr)[1:3,]
+@
+\end{frame}
+
+\begin{frame}[fragile]{Genotypes}
+0 = Reference, 1 = Alternate
+<<>>=
+head(geno(vcf)$GT)
+table(geno(vcf)$GT[,1])
+@
+
+\end{frame}
+
+\begin{frame}[fragile]
+Genomic postions are given by {\tt rowData}
+
+<<>>=
+head(rowData(vcf),3)
+@
+\end{frame}
+
+
+
+\begin{frame}
+\begin{itemize}
+\item{We can now retrieve variants in GRanges in format}
+\item{....we can also get transcripts as GRanges}
+\item{....and genome sequence}
+\item{....so we can annotate our variants easily}
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+
+{\tt locateVariants} does the hard work of locating variants with respect to gene function. N.B. Take care over chromosome naming.
+
+<<echo=FALSE>>=
+suppressPackageStartupMessages(library(TxDb.Hsapiens.UCSC.hg19.knownGene))
+@
+
+<<warnings=FALSE>>=
+library(TxDb.Hsapiens.UCSC.hg19.knownGene)
+txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
+seqlevels(vcf) <- c("22"="chr22")
+rd <- rowData(vcf)
+
+loc <- locateVariants(rd, txdb, CodingVariants())
+
+@
+
+Can also choose \textit{IntronVariants}, \textit{FiveUTRVariants}, \textit{ThreeUTRVariants}, \textit{IntergenicVariants}, \textit{SpliceSiteVariants} or \textit{PromoterVariants}
+
+\end{frame}
+
+\begin{frame}[fragile]
+
+<<>>=
+head(loc,3)
+@
+
+\end{frame}
+
+
+
+\begin{frame}[fragile]{Sanity check}
+
+<<>>=
+as.data.frame(loc[1])
+trans <- transcriptsBy(txdb,"gene")
+ol <- findOverlaps(loc[1], trans)
+ol
+names(trans)[subjectHits(ol)]
+@
+
+\end{frame}
+
+\begin{frame}[fragile]
+<<>>=
+trans[subjectHits(ol)]
+@
+
+\end{frame}
+
+\begin{frame}[fragile]{Lets check}
+
+<<eval=FALSE>>=
+cds <- cdsBy(txdb, "gene")
+ol <- findOverlaps(cds[["79087"]], loc)
+ol
+cds[subjectHits(ol)]
+@
+
+\end{frame}
+
+
+\begin{frame}[fragile]{Predicting Consequences}
+
+<<coding,echo=FALSE>>=
+suppressPackageStartupMessages(library(BSgenome.Hsapiens.UCSC.hg19))
+@
+
+<<>>=
+library(BSgenome.Hsapiens.UCSC.hg19)
+coding <- predictCoding(vcf, txdb, seqSource=Hsapiens)
+coding[1]
+@
+
+\end{frame}
+
+\begin{frame}[fragile]
+<<>>=
+table(coding$CONSEQUENCE)
+@
+\begin{itemize}
+\item{synonymous - no change in amino acid}
+\item{nonsynonymous - change in amino acid}
+\item{nonsense - premature stop codon}
+\item{frameshift-  number of nucleotides in a DNA sequence that is not divisible by three}
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Other filtering considerations}
+\begin{itemize}
+\item{Depth}
+\item{Mapping quality}
+\item{Novelty}
+\begin{itemize}
+\item{dbSNP}
+\item{1000 genomes}
+\item{Other sequenced genomes}
+\end{itemize}
+\item{Allele frequency}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Non-BioC resources}
+
+\begin{itemize}
+\item{\href{http://www.openbioinformatics.org/annovar/}{\color{blue}annovar}}
+\item{\href{http://snpeff.sourceforge.net/}{\color{blue}snpeff}}
+\item{\href{http://tinyurl.com/p4jckhn}{\color{blue}Exome 'How-to'}}
+\item{\href{http://vcftools.sourceforge.net/}{\color{blue}vcftools}}
+\end{itemize}
+\end{frame}
+
+
 
 %%\section{Wrap-up}
 
