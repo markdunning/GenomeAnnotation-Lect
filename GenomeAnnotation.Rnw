@@ -574,9 +574,8 @@ Variant-calling is a developing area in Bioconductor
 \begin{itemize}
 \item{VariantTools - Work in Progress} 
 \item{VariantAnnotation - Import and manipulate variant calls}
+\item{VariantFiltering}
 \item{deepSNV - Determine SNVs from targeted sequencing}
-\item{cn.mops - Copy Number detection}
-\item{exomeCopy - Copy Number from exome data}
 \item{ensemblVEP - Interface to ensembl}
 \end{itemize}
 \end{frame}
@@ -706,36 +705,6 @@ head(loc,3)
 
 
 
-\begin{frame}[fragile]{Sanity check}
-
-<<>>=
-as.data.frame(loc[1])
-trans <- transcriptsBy(txdb,"gene")
-ol <- findOverlaps(loc[1], trans)
-ol
-names(trans)[subjectHits(ol)]
-@
-
-\end{frame}
-
-\begin{frame}[fragile]
-<<>>=
-trans[subjectHits(ol)]
-@
-
-\end{frame}
-
-\begin{frame}[fragile]{Lets check}
-
-<<eval=FALSE>>=
-cds <- cdsBy(txdb, "gene")
-ol <- findOverlaps(cds[["79087"]], loc)
-ol
-cds[subjectHits(ol)]
-@
-
-\end{frame}
-
 
 \begin{frame}[fragile]{Predicting Consequences}
 
@@ -764,29 +733,39 @@ table(coding$CONSEQUENCE)
 
 \end{frame}
 
-\begin{frame}{Other filtering considerations}
-\begin{itemize}
-\item{Depth}
-\item{Mapping quality}
-\item{Novelty}
-\begin{itemize}
-\item{dbSNP}
-\item{1000 genomes}
-\item{Other sequenced genomes}
-\end{itemize}
-\item{Allele frequency}
-\end{itemize}
+
+\begin{frame}[fragile]{Checking for novelty}
+<<>>=
+library(SNPlocs.Hsapiens.dbSNP.20101109)
+chr22Snps <- getSNPlocs("ch22",as.GRanges = TRUE)
+chr22Snps
+@
+
 \end{frame}
 
-\begin{frame}{Non-BioC resources}
+%\begin{frame}{Other filtering considerations}
+%\begin{itemize}
+%\item{Depth}
+%\item{Mapping quality}
+%\item{Novelty}
+%\begin{itemize}
+%\item{dbSNP}
+%\item{1000 genomes}
+%\item{Other sequenced genomes}
+%\end{itemize}
+%\item{Allele frequency}
+%\end{itemize}
+%\end{frame}
 
-\begin{itemize}
-\item{\href{http://www.openbioinformatics.org/annovar/}{\color{blue}annovar}}
-\item{\href{http://snpeff.sourceforge.net/}{\color{blue}snpeff}}
-\item{\href{http://tinyurl.com/p4jckhn}{\color{blue}Exome 'How-to'}}
-\item{\href{http://vcftools.sourceforge.net/}{\color{blue}vcftools}}
-\end{itemize}
-\end{frame}
+%\begin{frame}{Non-BioC resources}
+
+%\begin{itemize}
+%\item{\href{http://www.openbioinformatics.org/annovar/}{\color{blue}annovar}}
+%\item{\href{http://snpeff.sourceforge.net/}{\color{blue}snpeff}}
+%\item{\href{http://tinyurl.com/p4jckhn}{\color{blue}Exome 'How-to'}}
+%\item{\href{http://vcftools.sourceforge.net/}{\color{blue}vcftools}}
+%\end{itemize}
+%\end{frame}
 
 
 
