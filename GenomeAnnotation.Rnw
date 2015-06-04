@@ -6,12 +6,13 @@
 \else
 \fi
 \begin{document}
+
 \pgfdeclareimage[height=0.5cm]{university-logo}{images/CRUK_CAMBRIDGE_I_Pos_RGB_300}
 \logo{\pgfuseimage{university-logo}}
 
 \title{Genomic Annotation and Visualisation using R and Bioconductor}
-\author{Mark Dunning}
-\date{4th September 2014}
+\author{Mark Dunning, Bioinformatics Training Coordinator}
+\date{2nd June 2015}
 \institute[Bioinformatics Core] % (optional, but mostly needed)
 {
 
