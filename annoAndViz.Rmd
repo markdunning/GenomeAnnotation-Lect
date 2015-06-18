@@ -1,0 +1,494 @@
+---
+title: "Genome Annotation and Visualisation using R and Bioconductor"
+author: "Mark Dunning"
+date: "29/07/2015"
+output: slidy_presentation
+---
+
+## Previously
+
+- Introduced Bioconductor facilites for manipulating strings and ranges
+- Executed workflow to find to identify genes and regions of interest in an RNA-seq experiment
+
+## Aims for this session
+
+- Obtaining annotation information from different sources
+    + Biomart
+    + Pre-built Bioconductor packages
+    + Browser tracks
+- Visualise
+    + Export our data to a genome browser
+    + Aligned sequencing reads
+    + Gene models
+
+    
+# biomaRt
+    
+## biomaRt
+
+- A wealth of annotation resources are available online through the biomart web software suite  - www.biomart.org
+- One-off queries are possible. But are they reproducible? What if you need to do further analysis on the results in R?}
+- Results generated using Bioconductor can be easily annotated against the vast wealth of online data available in biomart
+- User does not need to construct complex SQL queries
+
+## Connecting to biomaRt
+
+```{r}
+library(biomaRt)
+head(listMarts(), 5)    
+ensembl <- useMart("ensembl")
+```
+
+## Connecting to biomaRt
+
+```{r}
+ensembl <- useMart("ensembl", 
+                   dataset = "hsapiens_gene_ensembl")
+head(listDatasets(ensembl),10)
+```
+
+## An example query
+
+Say we want to find out more information about a given Entrez
+gene(s). Essentially we want to subset the database according to a
+particular filter. Available filters can be listed.
+
+```{r}
+head(listFilters(ensembl), 5)     
+```
+
+```{r}
+flt <- listFilters(ensembl)
+flt[grep("entrez", flt[,1]),]
+```
+
+## Attributes
+
+```{r}
+head(listAttributes(ensembl), 25)
+```
+
+## Forming the query
+- We are going to use `entrezgene`
+- First specify the filter type, and values
+    + these must be valid identifiers for the filter type
+    + in our case, valid Entrez IDs
+```{r}
+entrez <- c("673", "837")
+myfilter <- "entrezgene"
+```
+- Specify the attributes you want to retrieve
+    + this must be in the first column of the output of `listAttributes`
+
+```{r}
+attr = c("entrezgene", "hgnc_symbol", "ensembl_gene_id","description")
+allAttr <- listAttributes(ensembl)
+attr %in% allAttr[,1]
+```
+- Plug all the values into the `getBM` function
+```{r}
+myInfo <- getBM(filters="entrezgene",
+    values=entrez,
+    attributes=attr,
+    mart=ensembl)
+```
+
+## View the results
+
+```{r}
+myInfo
+```
+
+- Note that we don't necesarily get a data frame with one row per ID we specified
+    + in this case, one gene had more than one ensembl ID
+    + technically, we would say the mapping is *one-to-many*
+
+## Using multiple filters
+
+- A common query is to list genes within a certain genomic interval
+    + e.g. regions of interest from a CHiP-seq analysis
+- This time, our filters would be chromosome name, start and end
+    + we can specify these in a vector
+    + check the correct names by looking at the output of `listFilters`
+```{r}
+myfilters <- c("chromosome_name", "start", "end")
+```
+- The values need to be specified in a list
+```{r}
+myvalues <- list(16, 1100000, 1250000)
+```
+- Define attributes as before
+    + be careful that `start` and `end` are not valid *attribute* names 
+```{r}
+head(allAttr[grep("start", allAttr[,1]),])
+
+attr <- c("ensembl_gene_id", "hgnc_symbol","entrezgene","chromosome_name", "start_position", "end_position")
+```
+
+## Make the query
+
+```{r}
+myInfo <- getBM(attributes = attr,
+  filters = myfilters,
+  values=myvalues,mart=ensembl)
+myInfo
+```
+
+## Reversing the query
+
+- i.e supply gene names and get their positions
+
+```{r}
+myfilters <- "ensembl_gene_id"
+values = c("ENSG00000261713","ENSG00000261720","ENSG00000181791")
+attr <- c("ensembl_gene_id","chromosome_name","start_position", "end_position","entrezgene")
+getBM(attributes = attr, filters = myfilters, values = values,
+ensembl
+)
+```
+
+## Drawbacks
+
+- We had to define chromosome location in the previous example
+```{r}
+values=list(8, 148350, 148612)
+```
+- Objects such as `GRanges` are designed to inter-operate between different packages
+    + it would be nice if we could annotate using `GRanges` objects
+- What happens if the biomaRt server goes down?
+- Or if I can't connect to the internet?
+- Do we know which version of the genome etc we are using?
+
+## Genome packages can accept GRanges
+
+- We have already seen that Genome sequences have an efficient
+representation in Bioconductor
+
+```{r message=FALSE}
+library(BSgenome.Hsapiens.UCSC.hg19)
+hg19 <- BSgenome.Hsapiens.UCSC.hg19
+gr <- GRanges("chr16", IRanges(1100000, 1250000))
+getSeq(hg19, gr)
+```
+
+# Bioconductor Annotation Resources
+
+## Organism-level Packages
+
+- Bioconductor maintain a number of organism-level packages which
+are re-built every 6 months. A central identifier (Entrez gene id) is used.
+- These are listed on the annotation section of Bioconductor
+    + [here](http://bioconductor.org/packages/release/BiocViews.html#___AnnotationData)
+    + named *org.X.ID.db*
+    + where X is a two-letter organism acronym; i.e. Hs for human)
+    + ID represents which identifier scheme is used i.e. eg for Entrez 
+- Installed in the same way as regular Bioconductor packages
+    + `source("http://www.bioconductor.org/biocLite.R")`
+    + `biocLite(.....)`
+
+```{r message=FALSE} 
+library(org.Hs.eg.db)
+```
+
+## Filtering an organism package
+
+- `keytypes` are the names of the filters we can use
+
+```{r}
+keytypes(org.Hs.eg.db)
+```
+- We can see the names of valid keys
+```{r}
+length(keys(org.Hs.eg.db,keytype="ENTREZID"))
+head(keys(org.Hs.eg.db,keytype="ENTREZID"))
+```
+
+## Selecting attributes
+
+- the attributes are `columns`
+    + think the columns of a table that we want to look up
+```{r}
+columns(org.Hs.eg.db)
+```
+
+## Example query
+
+```{r}
+entrez <- c("673", "837")
+select(org.Hs.eg.db, keys=entrez,
+  keytype="ENTREZID",
+  columns=c("SYMBOL","CHRLOC","CHRLOCEND"))
+```
+
+## Another query
+> Give me the *Symbols* of every gene with *GO* ontology *GO:0003674*
+```{r}
+head(select(org.Hs.eg.db, keys = "GO:0003674",
+keytype = "GO", columns = "SYMBOL"))
+```
+
+## Managing gene models: GenomicFeatures
+
+- The GenomicFeatures package retrieves and manages transcript-related features from the UCSC Genome Bioinformatics and BioMart data resources
+- Transcript metadata is stored in an TranscriptDb object
+- The object maps 5 and 3 UTRS, protein coding sequences (CDS) and exons for a set of mRNA transcripts to their associated genome
+- *SQLite* database used to manage relationships between transcripts, exons, CDS and gene identifiers
+
+## Pre-built packages
+
+- Again a full list of packages is available on the BioC website
+    + [here](http://bioconductor.org/packages/release/BiocViews.html#___AnnotationData)
+- For humans, latest version is
+    + a convention is to assign the object to a shorter name to save some typing
+```{r}
+library(TxDb.Hsapiens.UCSC.hg19.knownGene)
+txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
+```
+
+## The transcriptDB object
+
+```{r}
+txdb
+```
+
+## keys for the object
+
+- As for the organism packages, we can see what keys are available
+
+```{r}
+keytypes(txdb)
+columns(txdb)
+```
+
+## Making a query
+
+```{r}
+select(txdb, keys=entrez,
+keytype="GENEID",
+columns=c("TXID",
+"TXCHROM", "TXSTART",
+"TXEND"))
+```
+
+## Querying the exons
+
+```{r}
+mygene <- select(txdb, keys = "673", keytype = "GENEID",
+columns = c("EXONID", "EXONCHROM", "EXONSTART","EXONEND","EXONSTRAND"))
+mygene
+```
+
+## Exon Strucutre
+
+- We could of course create a `GRanges` object from this
+
+```{r}
+GRanges(mygene$EXONCHROM, IRanges(mygene$EXONSTART,
+mygene$EXONEND),strand=mygene$EXONSTRAND,exon_id=mygene$EXONID)
+```
+
+## Convenience Functions
+
+```{r}
+trs <- transcripts(txdb)
+trs
+
+```
+
+## Retrieve all exons at once
+
+```{r}
+exs <- exons(txdb)
+exs
+```
+
+## Group by genes
+
+```{r}
+exons <- exonsBy(txdb, "gene")
+is(exons)
+length(exons)
+```
+
+see also `transcriptsBy`, `intronsByTranscript`, `fiveUTRsByTranscript`, `threeUTRsByTranscript`
+
+## Subset this object
+
+```{r}
+exons[["673"]]
+```
+
+## Implications
+
+- We now have a way of retrieving transcript and exon locations as `GRanges`.
+- Any function that uses a `GRanges` object can easily interact with gene locations
+    + Reading subset of a bam file
+    + Counting overlaps
+    + Retrieving genome sequence
+    
+## Examples
+
+Retreive the subset of reads that overlap a particular gene. 
+- First, return the positional information about the gene as a `GRanges` object
+```{r}
+gr <- exons[["49"]]
+```
+- Then, pass the `GRanges` object into the `readGAlignments` function
+    + here, the `system.time` function is used to report how long the function takes
+ 
+```{r, echo=FALSE} 
+mybam <-"exampleData/NA19914.chr22.bam"
+gr <- renameSeqlevels(gr, c("chr22"= "22"))
+ 
+``` 
+ 
+ 
+```{r}
+library(GenomicAlignments)
+system.time(bam.sub <- readGAlignments(file = mybam,
+    use.names = TRUE, param = ScanBamParam(which = gr)))
+```
+
+## Examine the output
+
+```{r}
+bam.sub
+```
+
+## Extension
+- What if we want per-exon counts?
+
+```{r}
+exonList <- split(gr, values(gr)$exon_id)
+names(exonList)
+exonList[[1]]
+gr[1]
+```
+
+## Rep
+
+```{r}
+system.time(bam.sub2 <- lapply(exonList, function(x) readGAlignments(file=mybam,
+                      use.names=TRUE, 
+                      param=ScanBamParam(which=x))))
+
+names(bam.sub2)
+bam.sub2[[1]]
+
+```
+
+## Retrieving gene sequences
+
+```{r}
+system.time(seqs <- getSeq(hg19, exons[["49"]]))
+seqs
+width(exons[["49"]])
+```
+
+## Alternative counting 
+
+```{r}
+bam <- readGAlignments(file = mybam)
+countOverlaps(gr, bam)
+```
+
+## Alternative counting
+
+- The `rtracklayer` package allows a number of standard genome *tracks* to be imported
+    + *bed*
+    + *gff*
+    + *wig*
+- The result is a `GRanges` object - of course!
+
+```{r}
+library(rtracklayer)
+download.file("http://www.nimblegen.com/downloads/annotation/ez_exome_v3/SeqCapEZ_Exome_v3.0_Design_Annotation_files.zip",destfile="Nimblgen-regions.zip")
+unzip("Nimblgen-regions.zip")
+nimb <- import("SeqCap_EZ_Exome_v3_primary.bed")
+nimb
+```
+
+
+
+
+## Annotating with other sources of variation
+
+```{r}
+library(SNPlocs.Hsapiens.dbSNP.20101109)
+chr22Snps <- getSNPlocs("ch22",as.GRanges = TRUE)
+chr22Snps
+```
+
+# AnnotationHub - Accessing whole genome resources in Bioconductor
+
+## Introducing AnnotationHub
+
+> The AnnotationHub server provides easy R / Bioconductor access to large collections of publicly available whole genome resources, e.g,. ENSEMBL genome fasta or gtf files, UCSC chain resources, ENCODE data tracks at UCSC, etc. - AnnotationHub Vignette
+
+```{r}
+library(AnnotationHub)
+ah <- AnnotationHub()
+```
+
+## 
+
+```{r}
+ah
+```
+
+## Drilling down further
+
+```{r}
+unique(ah$dataprovider)
+head(unique(ah$species))
+unique(ah$rdataclass)
+```
+
+## Retrieve a set of chain files
+
+```{r}
+humanRanges <- query(ah, c("GRanges", "UCSC", "Homo sapiens"))
+humanRanges
+```
+
+
+# Visualisation
+
+## Introducing ggbio
+
+- A consistent representation of ranges and genomic data helps with visualisation
+- The `ggbio` package is a toolkit for producing publication-quality images from genomic data
+- It extends the Grammar of Graphics approach taken by `ggplot2`
+- It knows about the standard Bioconductor classes we have already introduced
+- Published in [Genome Biology](http://www.genomebiology.com/2012/13/8/R77)
+![ggbio](images/ggbio.png)
+
+## The autoplot function
+
+```{r message=FALSE}
+library(ggbio)
+autoplot(bam.sub)
+```
+
+## 
+
+```{r message=FALSE}
+autoplot(bam.sub,stat="coverage")
+```
+
+## Plotting gene structure
+
+```{r message=FALSE}
+autoplot(txdb,which=exons[["49"]])
+```
+
+## Combining plots
+
+- x-axis structure is consistent between plots
+
+```{r}
+tracks(autoplot(txdb,which=exons[["49"]]),
+autoplot(bam.sub,stat="coverage"))
+```
+
+
