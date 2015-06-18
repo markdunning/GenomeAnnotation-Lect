@@ -329,6 +329,7 @@ exons[["673"]]
 ## Examples
 
 Retreive the subset of reads that overlap a particular gene. 
+
 - First, return the positional information about the gene as a `GRanges` object
 ```{r}
 gr <- exons[["49"]]
