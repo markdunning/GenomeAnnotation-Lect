@@ -455,6 +455,15 @@ humanRanges
 
 # Visualisation
 
+## Exporting results
+
+- `rtracklayer` can also be used to export results to a browser
+    + e.g. UCSC
+    
+## tracktables
+
+- export data to IGV
+
 ## Introducing ggbio
 
 - A consistent representation of ranges and genomic data helps with visualisation
@@ -492,4 +501,4 @@ tracks(autoplot(txdb,which=exons[["49"]]),
 autoplot(bam.sub,stat="coverage"))
 ```
 
-
+## GViz
