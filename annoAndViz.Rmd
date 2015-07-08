@@ -147,29 +147,6 @@ ensembl
 )
 ```
 
-## Drawbacks
-
-- We had to define chromosome location in the previous example
-```{r}
-values=list(8, 148350, 148612)
-```
-- Objects such as `GRanges` are designed to inter-operate between different packages
-    + it would be nice if we could annotate using `GRanges` objects
-- What happens if the biomaRt server goes down?
-- Or if I can't connect to the internet?
-- Do we know which version of the genome etc we are using?
-
-## Genome packages can accept GRanges
-
-- We have already seen that Genome sequences have an efficient
-representation in Bioconductor
-
-```{r message=FALSE}
-library(BSgenome.Hsapiens.UCSC.hg19)
-hg19 <- BSgenome.Hsapiens.UCSC.hg19
-gr <- GRanges("chr16", IRanges(1100000, 1250000))
-getSeq(hg19, gr)
-```
 
 # Bioconductor Annotation Resources
 
@@ -356,29 +333,14 @@ system.time(bam.sub <- readGAlignments(file = mybam,
 bam.sub
 ```
 
-## Extension
-- What if we want per-exon counts?
-
-```{r}
-exonList <- split(gr, values(gr)$exon_id)
-names(exonList)
-exonList[[1]]
-gr[1]
-```
-
-## Rep
-
-```{r}
-system.time(bam.sub2 <- lapply(exonList, function(x) readGAlignments(file=mybam,
-                      use.names=TRUE, 
-                      param=ScanBamParam(which=x))))
-
-names(bam.sub2)
-bam.sub2[[1]]
-
-```
 
 ## Retrieving gene sequences
+
+```{r message=FALSE}
+library(BSgenome.Hsapiens.UCSC.hg19)
+hg19 <- BSgenome.Hsapiens.UCSC.hg19
+```
+
 
 ```{r}
 system.time(seqs <- getSeq(hg19, exons[["49"]]))
@@ -393,7 +355,7 @@ bam <- readGAlignments(file = mybam)
 countOverlaps(gr, bam)
 ```
 
-## Alternative counting
+## Other sources of annotation
 
 - The `rtracklayer` package allows a number of standard genome *tracks* to be imported
     + *bed*
@@ -401,7 +363,7 @@ countOverlaps(gr, bam)
     + *wig*
 - The result is a `GRanges` object - of course!
 
-```{r}
+```{r eval=FALSE}
 library(rtracklayer)
 download.file("http://www.nimblegen.com/downloads/annotation/ez_exome_v3/SeqCapEZ_Exome_v3.0_Design_Annotation_files.zip",destfile="Nimblgen-regions.zip")
 unzip("Nimblgen-regions.zip")
@@ -409,6 +371,15 @@ nimb <- import("SeqCap_EZ_Exome_v3_primary.bed")
 nimb
 ```
 
+```{r echo=FALSE}
+library(rtracklayer)
+if(!file.exists("SeqCap_EZ_Exome_v3_primary.bed")){ 
+  download.file("http://www.nimblegen.com/downloads/annotation/ez_exome_v3/SeqCapEZ_Exome_v3.0_Design_Annotation_files.zip",destfile="Nimblgen-regions.zip")
+  unzip("Nimblgen-regions.zip")
+}
+nimb <- import("SeqCap_EZ_Exome_v3_primary.bed")
+nimb
+```
 
 
 
@@ -420,37 +391,6 @@ chr22Snps <- getSNPlocs("ch22",as.GRanges = TRUE)
 chr22Snps
 ```
 
-# AnnotationHub - Accessing whole genome resources in Bioconductor
-
-## Introducing AnnotationHub
-
-> The AnnotationHub server provides easy R / Bioconductor access to large collections of publicly available whole genome resources, e.g,. ENSEMBL genome fasta or gtf files, UCSC chain resources, ENCODE data tracks at UCSC, etc. - AnnotationHub Vignette
-
-```{r}
-library(AnnotationHub)
-ah <- AnnotationHub()
-```
-
-## 
-
-```{r}
-ah
-```
-
-## Drilling down further
-
-```{r}
-unique(ah$dataprovider)
-head(unique(ah$species))
-unique(ah$rdataclass)
-```
-
-## Retrieve a set of chain files
-
-```{r}
-humanRanges <- query(ah, c("GRanges", "UCSC", "Homo sapiens"))
-humanRanges
-```
 
 
 # Visualisation
@@ -496,7 +436,7 @@ autoplot(txdb,which=exons[["49"]])
 
 - x-axis structure is consistent between plots
 
-```{r}
+```{r message=FALSE}
 tracks(autoplot(txdb,which=exons[["49"]]),
 autoplot(bam.sub,stat="coverage"))
 ```
