@@ -362,7 +362,7 @@ countOverlaps(gr, bam)
     + *gff*
     + *wig*
 - The result is a `GRanges` object - of course!
-- 'rtracklayer' can also *export* our results in common formats
+
 
 ```{r eval=FALSE}
 library(rtracklayer)
@@ -401,10 +401,6 @@ chr22Snps
 - `rtracklayer` can also be used to export results to a browser
     + e.g. UCSC
     
-## tracktables
-
-- export data to IGV
-
 ## Introducing ggbio
 
 - A consistent representation of ranges and genomic data helps with visualisation
