@@ -362,6 +362,7 @@ countOverlaps(gr, bam)
     + *gff*
     + *wig*
 - The result is a `GRanges` object - of course!
+- 'rtracklayer' can also *export* our results in common formats
 
 ```{r eval=FALSE}
 library(rtracklayer)
