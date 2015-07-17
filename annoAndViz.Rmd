@@ -17,8 +17,8 @@ output: slidy_presentation
     + Pre-built Bioconductor packages
     + Browser tracks
 - Visualise
-    + Export our data to a genome browser
     + Aligned sequencing reads
+    + Coverage
     + Gene models
 
     
@@ -215,7 +215,7 @@ keytype = "GO", columns = "SYMBOL"))
 
 - Again a full list of packages is available on the BioC website
     + [here](http://bioconductor.org/packages/release/BiocViews.html#___AnnotationData)
-- For humans, latest version is
+- For humans, latest version is `TxDb.Hsapiens.UCSC.hg19.knownGene`
     + a convention is to assign the object to a shorter name to save some typing
 ```{r}
 library(TxDb.Hsapiens.UCSC.hg19.knownGene)
@@ -384,22 +384,77 @@ nimb
 
 
 
-## Annotating with other sources of variation
-
-```{r}
-library(SNPlocs.Hsapiens.dbSNP.20101109)
-chr22Snps <- getSNPlocs("ch22",as.GRanges = TRUE)
-chr22Snps
-```
-
-
 
 # Visualisation
 
-## Exporting results
+## More-advanced graphics in R
 
-- `rtracklayer` can also be used to export results to a browser
-    + e.g. UCSC
+- Base graphics in R use a canvas model
+    + series of instructions that sequentially fill the plotting canvas
+    
+- ggplot2 employs a `grammar of graphics approach`
+- The components are
+    + a datset
+    + geometric object that is visual representation of the data
+        + e.g. points, lines, etc
+    + mapping of variables to visual properties of plot
+        + ***aesthetics***
+    + (statistical summarisation rule)
+    + (coordinate system)
+    + (facet specification)
+
+## The grammar of graphics approach
+
+## Plot Comparison
+
+```{r fig.height=3}
+x <- 1:10
+y <- 2*x
+plot(x,y)
+```
+
+```{r fig.height=3}
+library(ggplot2)
+df <-data.frame(x,y)
+ggplot(df, aes(x=x,y=y)) + geom_point()
+
+```
+
+## Plot construction
+- ggplot2 needs data as a data frame
+- It needs to be `long` format
+
+```{r}
+library(reshape2)
+df <- data.frame(A = rnorm(5,3), B=rnorm(5,1))
+df[1:3,]
+df2 <- melt(df)
+df2
+```
+
+## Plot construction
+
+```{r}
+ggplot(df2, aes(x = variable,y=value)) + geom_boxplot()
+```
+
+
+## Plot construction
+
+```{r fig.height=3}
+ggplot(df2, aes(x = variable,y=value,fill=variable)) + geom_boxplot()
+```
+
+## Updating a plot
+
+- ggplot2 will easily re-drawn a plot as new variables are added
+    + a real advantage!
+```{r fig.height=3}
+df <- data.frame(A = rnorm(5,3), B=rnorm(5,1),C=rnorm(5,2))
+df2 <- melt(df)
+ggplot(df2, aes(x = variable,y=value,fill=variable)) + geom_boxplot()
+```
+
     
 ## Introducing ggbio
 
