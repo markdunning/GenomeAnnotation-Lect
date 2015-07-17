@@ -467,6 +467,8 @@ ggplot(df2, aes(x = variable,y=value,fill=variable)) + geom_boxplot()
 
 ## The autoplot function
 
+- Guesses what type of plot you want from the data
+
 ```{r message=FALSE}
 library(ggbio)
 autoplot(bam.sub)
@@ -486,6 +488,9 @@ autoplot(txdb,which=exons[["49"]])
 
 ## Combining plots
 
+- plots made by `ggplot2` cannot be customised in the usual way with `par`
+    + e.g. `par(mfrow=c(1,2))`
+- `tracks` can do this job in `ggbio`    
 - x-axis structure is consistent between plots
 
 ```{r message=FALSE}
@@ -493,4 +498,8 @@ tracks(autoplot(txdb,which=exons[["49"]]),
 autoplot(bam.sub,stat="coverage"))
 ```
 
-## GViz
+## Practical time
+
+- Use `ggplot2` and `ggbio` to explore the RNA-seq results
+- Feel free to experiment
+- Or check-out the vignettes for either package
