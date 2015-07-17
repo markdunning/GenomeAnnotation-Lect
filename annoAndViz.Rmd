@@ -474,7 +474,7 @@ library(ggbio)
 autoplot(bam.sub)
 ```
 
-## 
+## Can choose a summary statistic
 
 ```{r message=FALSE}
 autoplot(bam.sub,stat="coverage")
