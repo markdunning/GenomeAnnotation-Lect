@@ -26,7 +26,7 @@ output: slidy_presentation
     
 ## biomaRt
 
-- A wealth of annotation resources are available online through the [biomart](www.biomart.org) web software suite. 
+- A wealth of annotation resources are available online through the [biomart](http://www.biomart.org) web software suite. 
 - One-off queries are possible. But are they reproducible? What if you need to do further analysis on the results in R?
 - Results generated using Bioconductor can be easily annotated against the vast wealth of online data available in biomart
 - User does not need to construct complex SQL queries
