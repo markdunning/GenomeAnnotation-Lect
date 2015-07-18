@@ -508,6 +508,26 @@ tracks(autoplot(txdb,which=exons[["49"]]),
 autoplot(bam.sub,stat="coverage"))
 ```
 
+## Different layouts available
+
+- Can easily switch between different ploy layouts
+    + geoms in ggplot2 terms
+- Also set aesthetics from properties in the data
+    + using `aes`; like in `ggplot2`
+- e.g. Manhattan plot
+
+![manhat](images/gb-2012-13-8-r77-3.jpg)
+
+## Karyograph
+
+Karyogram
+
+![kgram](images/gb-2012-13-8-r77-4.jpg)
+
+## Circular
+
+![circos](images/gb-2012-13-8-r77-5.jpg)
+
 ## Practical time
 
 - Use `ggplot2` and `ggbio` to explore the RNA-seq results
