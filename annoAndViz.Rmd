@@ -27,7 +27,7 @@ output: slidy_presentation
 ## biomaRt
 
 - A wealth of annotation resources are available online through the biomart web software suite  - www.biomart.org
-- One-off queries are possible. But are they reproducible? What if you need to do further analysis on the results in R?}
+- One-off queries are possible. But are they reproducible? What if you need to do further analysis on the results in R?
 - Results generated using Bioconductor can be easily annotated against the vast wealth of online data available in biomart
 - User does not need to construct complex SQL queries
 
@@ -49,9 +49,10 @@ head(listDatasets(ensembl),10)
 
 ## An example query
 
-Say we want to find out more information about a given Entrez
-gene(s). Essentially we want to subset the database according to a
-particular filter. Available filters can be listed.
+Say we want to find out more information about a given ***Entrez***
+gene(s). 
+- Essentially we want to subset the database according to a particular *filter*.
+- Available filters can be listed.
 
 ```{r}
 head(listFilters(ensembl), 5)     
@@ -64,6 +65,7 @@ flt[grep("entrez", flt[,1]),]
 
 ## Attributes
 
+- *Attributes* are the information that can be retreived 
 ```{r}
 head(listAttributes(ensembl), 25)
 ```
@@ -166,6 +168,8 @@ are re-built every 6 months. A central identifier (Entrez gene id) is used.
 ```{r message=FALSE} 
 library(org.Hs.eg.db)
 ```
+- Larger download size, but you only need to download once per-Bioconductor release
+- Enable *offline* queries
 
 ## Filtering an organism package
 
@@ -210,6 +214,7 @@ keytype = "GO", columns = "SYMBOL"))
 - Transcript metadata is stored in an TranscriptDb object
 - The object maps 5 and 3 UTRS, protein coding sequences (CDS) and exons for a set of mRNA transcripts to their associated genome
 - *SQLite* database used to manage relationships between transcripts, exons, CDS and gene identifiers
+- Again, offline queries can be made
 
 ## Pre-built packages
 
@@ -382,7 +387,12 @@ nimb <- import("SeqCap_EZ_Exome_v3_primary.bed")
 nimb
 ```
 
+## Practical time
+Exploring RNA-seq results
 
+- Using biomaRt
+- organism packages
+- transcript databases
 
 
 # Visualisation
@@ -468,7 +478,7 @@ ggplot(df2, aes(x = variable,y=value,fill=variable)) + geom_boxplot()
 ## The autoplot function
 
 - Guesses what type of plot you want from the data
-
+- Figures out the x and y coordinates
 ```{r message=FALSE}
 library(ggbio)
 autoplot(bam.sub)
