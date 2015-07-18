@@ -26,7 +26,7 @@ output: slidy_presentation
     
 ## biomaRt
 
-- A wealth of annotation resources are available online through the biomart web software suite  - www.biomart.org
+- A wealth of annotation resources are available online through the [biomart](www.biomart.org) web software suite. 
 - One-off queries are possible. But are they reproducible? What if you need to do further analysis on the results in R?
 - Results generated using Bioconductor can be easily annotated against the vast wealth of online data available in biomart
 - User does not need to construct complex SQL queries
@@ -51,6 +51,7 @@ head(listDatasets(ensembl),10)
 
 Say we want to find out more information about a given ***Entrez***
 gene(s). 
+
 - Essentially we want to subset the database according to a particular *filter*.
 - Available filters can be listed.
 
@@ -210,11 +211,11 @@ keytype = "GO", columns = "SYMBOL"))
 
 ## Managing gene models: GenomicFeatures
 
-- The GenomicFeatures package retrieves and manages transcript-related features from the UCSC Genome Bioinformatics and BioMart data resources
-- Transcript metadata is stored in an TranscriptDb object
+- The GenomicFeatures package retrieves and manages transcript-related features from the UCSC Genome site and BioMart data resources
+- Transcript metadata is stored in an *TranscriptDb* object
 - The object maps 5 and 3 UTRS, protein coding sequences (CDS) and exons for a set of mRNA transcripts to their associated genome
 - *SQLite* database used to manage relationships between transcripts, exons, CDS and gene identifiers
-- Again, offline queries can be made
+- Again, *offline* queries can be made
 
 ## Pre-built packages
 
@@ -413,7 +414,10 @@ Exploring RNA-seq results
     + (coordinate system)
     + (facet specification)
 
-## The grammar of graphics approach
+## ggplot2 overview
+ggplot2 [cheat-sheet](https://www.rstudio.com/wp-content/uploads/2015/03/ggplot2-cheatsheet.pdf)
+
+![cheatsheet](images/ggplot2-csheat.png)
 
 ## Plot Comparison
 
