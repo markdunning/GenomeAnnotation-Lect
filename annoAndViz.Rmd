@@ -2,7 +2,7 @@
 title: "Genome Annotation and Visualisation using R and Bioconductor"
 author: "Mark Dunning"
 date: "29/07/2015"
-output: slidy_presentation
+output: html_document
 ---
 
 ## Previously
