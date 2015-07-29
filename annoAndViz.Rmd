@@ -1,8 +1,10 @@
 ---
 title: "Genome Annotation and Visualisation using R and Bioconductor"
 author: "Mark Dunning"
-date: "29/07/2015"
-output: slidy_presentation
+date: '`r format(Sys.time(), "Last modified: %d %b %Y")`'
+output:
+  slidy_presentation:
+    keep_md: yes
 ---
 
 ## Previously
@@ -160,7 +162,7 @@ are re-built every 6 months. A central identifier (Entrez gene id) is used.
 - These are listed on the annotation section of Bioconductor
     + [here](http://bioconductor.org/packages/release/BiocViews.html#___AnnotationData)
     + named *org.X.ID.db*
-    + where X is a two-letter organism acronym; i.e. Hs for human)
+    + where X is a two-letter organism acronym; i.e. Hs for human
     + ID represents which identifier scheme is used i.e. eg for Entrez 
 - Installed in the same way as regular Bioconductor packages
     + `source("http://www.bioconductor.org/biocLite.R")`
@@ -211,9 +213,9 @@ keytype = "GO", columns = "SYMBOL"))
 
 ## Managing gene models: GenomicFeatures
 
-- The GenomicFeatures package retrieves and manages transcript-related features from the UCSC Genome site and BioMart data resources
+- The GenomicFeatures package retrieves and manages transcript-related features from the UCSC Genome browser and BioMart data resources
 - Transcript metadata is stored in an *TranscriptDb* object
-- The object maps 5 and 3 UTRS, protein coding sequences (CDS) and exons for a set of mRNA transcripts to their associated genome
+- The object maps 5' and 3' UTRs, protein coding sequences (CDS) and exons for a set of mRNA transcripts to their associated genome
 - *SQLite* database used to manage relationships between transcripts, exons, CDS and gene identifiers
 - Again, *offline* queries can be made
 
@@ -295,7 +297,7 @@ length(exons)
 
 see also `transcriptsBy`, `intronsByTranscript`, `fiveUTRsByTranscript`, `threeUTRsByTranscript`
 
-## Subset this object
+## How to subset this object
 
 ```{r}
 exons[["673"]]
@@ -311,7 +313,7 @@ exons[["673"]]
     
 ## Examples
 
-Rertieve the subset of reads that overlap a particular gene. 
+Retrieve the subset of reads that overlap a particular gene. 
 
 - First, return the positional information about the gene as a `GRanges` object
 ```{r}
@@ -474,7 +476,7 @@ ggplot(df2, aes(x = variable,y=value,fill=variable)) + geom_boxplot()
 
 - A consistent representation of ranges and genomic data helps with visualisation
 - The `ggbio` package is a toolkit for producing publication-quality images from genomic data
-- It extends the Grammar of Graphics approach taken by `ggplot2`
+- It extends the ***Grammar of Graphics*** approach taken by `ggplot2`
 - It knows about the standard Bioconductor classes we have already introduced
 - Published in [Genome Biology](http://www.genomebiology.com/2012/13/8/R77)
 ![ggbio](images/ggbio.png)
@@ -504,7 +506,7 @@ autoplot(txdb,which=exons[["49"]])
 
 - plots made by `ggplot2` cannot be customised in the usual way with `par`
     + e.g. `par(mfrow=c(1,2))`
-- `tracks` can do this job in `ggbio`    
+- the `tracks` function in `ggbio` can do this job    
 - x-axis structure is consistent between plots
 
 ```{r message=FALSE}
@@ -522,7 +524,7 @@ autoplot(bam.sub,stat="coverage"))
 
 ![manhat](images/gb-2012-13-8-r77-3.jpg)
 
-## Karyograph
+## Karyogram
 
 Karyogram
 
