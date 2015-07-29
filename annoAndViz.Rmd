@@ -261,7 +261,7 @@ columns = c("EXONID", "EXONCHROM", "EXONSTART","EXONEND","EXONSTRAND"))
 mygene
 ```
 
-## Exon Strucutre
+## Exon Structure
 
 - We could of course create a `GRanges` object from this
 
@@ -311,7 +311,7 @@ exons[["673"]]
     
 ## Examples
 
-Retreive the subset of reads that overlap a particular gene. 
+Rertieve the subset of reads that overlap a particular gene. 
 
 - First, return the positional information about the gene as a `GRanges` object
 ```{r}
@@ -436,7 +436,7 @@ ggplot(df, aes(x=x,y=y)) + geom_point()
 
 ## Plot construction
 - ggplot2 needs data as a data frame
-- It needs to be `long` format
+- It needs to be ***long*** format
 
 ```{r}
 library(reshape2)
@@ -514,7 +514,7 @@ autoplot(bam.sub,stat="coverage"))
 
 ## Different layouts available
 
-- Can easily switch between different ploy layouts
+- Can easily switch between different plot layouts
     + geoms in ggplot2 terms
 - Also set aesthetics from properties in the data
     + using `aes`; like in `ggplot2`
