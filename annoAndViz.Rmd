@@ -103,9 +103,7 @@ myInfo <- getBM(filters="entrezgene",
 myInfo
 ```
 
-- Note that we don't necesarily get a data frame with one row per ID we specified
-    + in this case, one gene had more than one ensembl ID
-    + technically, we would say the mapping is *one-to-many*
+
 
 ## Using multiple filters
 
@@ -122,7 +120,7 @@ myfilters <- c("chromosome_name", "start", "end")
 myvalues <- list(16, 1100000, 1250000)
 ```
 - Define attributes as before
-    + be careful that `start` and `end` are not valid *attribute* names 
+    + be careful as `start` and `end` are ***not*** valid *attribute* names 
 ```{r}
 head(allAttr[grep("start", allAttr[,1]),])
 
@@ -406,7 +404,7 @@ Exploring RNA-seq results
     
 - ggplot2 employs a `grammar of graphics approach`
 - The components are
-    + a datset
+    + a dataset
     + geometric object that is visual representation of the data
         + e.g. points, lines, etc
     + mapping of variables to visual properties of plot
