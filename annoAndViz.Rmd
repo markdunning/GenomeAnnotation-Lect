@@ -37,15 +37,14 @@ output:
 
 ```{r}
 library(biomaRt)
-head(listMarts(), 5)    
-ensembl <- useMart("ensembl")
+head(listMarts(host="www.ensembl.org"), 5)    
+ensembl <- useEnsembl(biomart="ensembl",dataset="hsapiens_gene_ensembl")
 ```
 
 ## Connecting to biomaRt
 
 ```{r}
-ensembl <- useMart("ensembl", 
-                   dataset = "hsapiens_gene_ensembl")
+ensembl <- useEnsembl(biomart="ensembl",dataset="hsapiens_gene_ensembl")
 head(listDatasets(ensembl),10)
 ```
 
